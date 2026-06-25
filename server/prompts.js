@@ -7,16 +7,17 @@ export function buildCopyMessages({ requirement, template }) {
     {
       role: 'system',
       content:
-        'You are a senior Chinese advertising copywriter and poster art director. Return strict JSON only. The JSON object must contain title, subtitle, sellingPoints, callToAction, visualStyle, and imagePrompt.',
+        '你是一位资深中文广告文案策划和海报美术指导。只返回严格 JSON，不要返回 Markdown。JSON 对象必须包含 title、subtitle、sellingPoints、callToAction、visualStyle、imagePrompt。',
     },
     {
       role: 'user',
       content: [
-        `User requirement: ${requirement}`,
-        `Template: ${templateGuide.label}`,
-        `Template visual direction: ${templateGuide.prompt}`,
-        'Create concise Chinese poster copy. sellingPoints must be an array of 3 short strings.',
-        'imagePrompt must be an English prompt for generating a complete poster image with the copy visibly included in the design.',
+        `用户需求：${requirement}`,
+        `海报模板：${templateGuide.label}`,
+        `模板视觉方向：${templateGuide.prompt}`,
+        '请面向中国大陆市场生成简洁、有商业转化感的中文海报文案。',
+        'sellingPoints 必须是 3 个短中文字符串组成的数组。',
+        'imagePrompt 必须是中文视觉提示词，用于生成完整中文海报画面，并提醒模型清晰呈现文案。',
       ].join('\n'),
     },
   ];
@@ -30,17 +31,17 @@ export function buildPosterPrompt({ copy, template }) {
     : '';
 
   return [
-    'Generate a complete finished poster image, not a background and not a mockup.',
-    `Poster type: ${templateGuide.label}.`,
-    `Visual direction: ${templateGuide.prompt}.`,
-    safeCopy.visualStyle ? `Style: ${safeCopy.visualStyle}.` : '',
-    safeCopy.imagePrompt ? `Art direction: ${safeCopy.imagePrompt}.` : '',
-    'Use the following Chinese text as visible poster typography:',
-    safeCopy.title ? `Main title: ${safeCopy.title}` : '',
-    safeCopy.subtitle ? `Subtitle: ${safeCopy.subtitle}` : '',
-    sellingPoints ? `Selling points: ${sellingPoints}` : '',
-    safeCopy.callToAction ? `Call to action: ${safeCopy.callToAction}` : '',
-    'Design requirements: polished commercial poster, strong layout hierarchy, readable typography, high-resolution square composition.',
+    '生成一张完整的中文商业海报，不是背景图，也不是样机图。',
+    `海报类型：${templateGuide.label}。`,
+    `视觉方向：${templateGuide.prompt}。`,
+    safeCopy.visualStyle ? `整体风格：${safeCopy.visualStyle}。` : '',
+    safeCopy.imagePrompt ? `画面提示：${safeCopy.imagePrompt}。` : '',
+    '请在画面中清晰呈现以下中文文案，必须逐字准确，不要增删、改写或生成错别字：',
+    safeCopy.title ? `主标题：「${safeCopy.title}」` : '',
+    safeCopy.subtitle ? `副标题：「${safeCopy.subtitle}」` : '',
+    sellingPoints ? `卖点：「${sellingPoints}」` : '',
+    safeCopy.callToAction ? `行动语：「${safeCopy.callToAction}」` : '',
+    '设计要求：适合中国大陆市场审美，中文字体清晰易读，商业感强，排版层级明确，画面精致，高分辨率正方形构图。',
   ]
     .filter(Boolean)
     .join('\n');
@@ -53,10 +54,10 @@ export function buildPosterEditPrompt({ copy, template, selection, instruction }
 
   return [
     basePrompt,
-    'Local edit request:',
-    `Selected point: x ${xPercent}%, y ${yPercent}% from the top-left corner of the poster.`,
-    `User instruction: ${instruction}`,
-    'Apply the requested change near the selected point. Preserve the rest of the poster, including layout, typography hierarchy, colors, product details, and overall style unless the instruction explicitly asks to change them.',
-    'Return a complete finished poster image.',
+    '局部修改要求：',
+    `选中位置：从海报左上角计算，x ${xPercent}%，y ${yPercent}%。`,
+    `用户修改指令：${instruction}`,
+    '请优先在选中位置附近应用修改。除非用户明确要求，否则保持海报其他区域不变，包括布局、文字层级、颜色、商品细节和整体风格。',
+    '返回一张完整的中文商业海报成图。',
   ].join('\n');
 }

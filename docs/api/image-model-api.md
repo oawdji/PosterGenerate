@@ -39,18 +39,18 @@ Full poster request body:
 ```json
 {
   "model": "AI_IMAGE_MODEL",
-  "prompt": "Generate a complete finished poster image...",
+  "prompt": "生成一张完整的中文商业海报...",
   "size": "1024x1024",
   "n": 1
 }
 ```
 
-Local edit request body also uses `/v1/images/generations`. The prompt includes the selected point and edit instruction:
+Local edit request body also uses `/v1/images/generations`. The prompt is written in Chinese and includes the selected point and edit instruction:
 
 ```json
 {
   "model": "AI_IMAGE_MODEL",
-  "prompt": "Generate a complete finished poster image...\nLocal edit request:\nSelected point: x 25%, y 75%...\nUser instruction: 把这里改成红色按钮...",
+  "prompt": "生成一张完整的中文商业海报...\n局部修改要求：\n选中位置：从海报左上角计算，x 25%，y 75%...\n用户修改指令：把这里改成红色按钮...",
   "size": "1024x1024",
   "n": 1
 }
@@ -90,7 +90,7 @@ Request body:
     "sellingPoints": ["精品咖啡", "手作甜点", "周末限定"],
     "callToAction": "立即到店尝鲜",
     "visualStyle": "warm premium coffee poster",
-    "imagePrompt": "A complete warm coffee promotion poster"
+    "imagePrompt": "温暖高级的咖啡店促销海报，中文文字清晰可读"
   }
 }
 ```
@@ -137,7 +137,7 @@ Request body:
     "sellingPoints": ["精品咖啡", "手作甜点", "周末限定"],
     "callToAction": "立即到店尝鲜",
     "visualStyle": "warm premium coffee poster",
-    "imagePrompt": "A complete warm coffee promotion poster"
+    "imagePrompt": "温暖高级的咖啡店促销海报，中文文字清晰可读"
   },
   "selection": {
     "x": 0.25,

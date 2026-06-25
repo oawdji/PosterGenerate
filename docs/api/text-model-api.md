@@ -40,11 +40,11 @@ Request body:
   "messages": [
     {
       "role": "system",
-      "content": "You are a senior Chinese advertising copywriter and poster art director. Return strict JSON only..."
+      "content": "你是一位资深中文广告文案策划和海报美术指导。只返回严格 JSON..."
     },
     {
       "role": "user",
-      "content": "User requirement: ...\nTemplate: ...\nTemplate visual direction: ..."
+      "content": "用户需求：...\n海报模板：...\n模板视觉方向：...\n请面向中国大陆市场生成..."
     }
   ],
   "temperature": 0.7,
@@ -71,7 +71,7 @@ Expected JSON shape:
   "sellingPoints": ["精品咖啡", "手作甜点", "周末限定"],
   "callToAction": "立即到店尝鲜",
   "visualStyle": "warm premium coffee poster",
-  "imagePrompt": "A complete warm coffee promotion poster"
+  "imagePrompt": "温暖高级的咖啡店促销海报，中文文字清晰可读"
 }
 ```
 
@@ -103,7 +103,7 @@ Success response:
     "sellingPoints": ["精品咖啡", "手作甜点", "周末限定"],
     "callToAction": "立即到店尝鲜",
     "visualStyle": "warm premium coffee poster",
-    "imagePrompt": "A complete warm coffee promotion poster"
+    "imagePrompt": "温暖高级的咖啡店促销海报，中文文字清晰可读"
   }
 }
 ```

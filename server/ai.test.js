@@ -91,9 +91,10 @@ test('buildCopyMessages includes requirement and template guidance', () => {
   assert.equal(messages[1].role, 'user');
   assert.match(messages[1].content, /咖啡店周末促销/);
   assert.match(messages[1].content, /commercial promotion poster/);
+  assert.match(messages[1].content, /面向中国大陆市场/);
 });
 
-test('buildPosterPrompt includes edited copy and asks for a complete poster', () => {
+test('buildPosterPrompt uses Chinese instructions for China-market poster text', () => {
   const prompt = buildPosterPrompt({
     template: 'commercial',
     copy: {
@@ -106,13 +107,15 @@ test('buildPosterPrompt includes edited copy and asks for a complete poster', ()
     },
   });
 
-  assert.match(prompt, /complete finished poster image/);
+  assert.match(prompt, /生成一张完整的中文商业海报/);
+  assert.match(prompt, /必须逐字准确/);
+  assert.match(prompt, /适合中国大陆市场审美/);
   assert.match(prompt, /新品上市/);
   assert.match(prompt, /手作甜点/);
   assert.match(prompt, /commercial promotion poster/);
 });
 
-test('buildPosterEditPrompt includes the selected point and local edit instruction', () => {
+test('buildPosterEditPrompt uses Chinese local edit instructions', () => {
   const prompt = buildPosterEditPrompt({
     template: 'commercial',
     instruction: '把这里改成红色按钮',
@@ -123,9 +126,9 @@ test('buildPosterEditPrompt includes the selected point and local edit instructi
     },
   });
 
-  assert.match(prompt, /Selected point: x 25%, y 75%/);
+  assert.match(prompt, /选中位置：从海报左上角计算，x 25%，y 75%/);
   assert.match(prompt, /把这里改成红色按钮/);
-  assert.match(prompt, /Preserve the rest of the poster/);
+  assert.match(prompt, /保持海报其他区域不变/);
   assert.match(prompt, /新品上市/);
 });
 
@@ -163,7 +166,7 @@ test('generateEditedPoster uses the image generation endpoint with the local edi
     assert.equal(requests[0].options.headers['content-type'], 'application/json');
     const body = JSON.parse(requests[0].options.body);
     assert.equal(body.model, 'poster-model');
-    assert.match(body.prompt, /Selected point: x 25%, y 75%/);
+    assert.match(body.prompt, /选中位置：从海报左上角计算，x 25%，y 75%/);
     assert.match(body.prompt, /把这里改成红色按钮/);
   } finally {
     globalThis.fetch = originalFetch;
