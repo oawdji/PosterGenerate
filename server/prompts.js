@@ -45,3 +45,18 @@ export function buildPosterPrompt({ copy, template }) {
     .filter(Boolean)
     .join('\n');
 }
+
+export function buildPosterEditPrompt({ copy, template, selection, instruction }) {
+  const basePrompt = buildPosterPrompt({ copy, template });
+  const xPercent = Math.round(Number(selection?.x || 0) * 100);
+  const yPercent = Math.round(Number(selection?.y || 0) * 100);
+
+  return [
+    basePrompt,
+    'Local edit request:',
+    `Selected point: x ${xPercent}%, y ${yPercent}% from the top-left corner of the poster.`,
+    `User instruction: ${instruction}`,
+    'Apply the requested change near the selected point. Preserve the rest of the poster, including layout, typography hierarchy, colors, product details, and overall style unless the instruction explicitly asks to change them.',
+    'Return a complete finished poster image.',
+  ].join('\n');
+}

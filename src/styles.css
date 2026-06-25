@@ -193,6 +193,49 @@ button:disabled {
   object-fit: contain;
   border-radius: 8px;
   box-shadow: 0 18px 42px rgb(30 36 33 / 18%);
+  cursor: crosshair;
+  display: block;
+}
+
+.poster-editor {
+  position: relative;
+  width: min(100%, 720px);
+}
+
+.selection-marker {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  background: rgb(240 200 90 / 72%);
+  box-shadow: 0 0 0 2px #23685b, 0 8px 18px rgb(0 0 0 / 22%);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.local-edit-panel {
+  display: grid;
+  width: min(100%, 520px);
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.local-edit-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #344139;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.local-edit-panel label {
+  display: grid;
+  gap: 8px;
+  color: #344139;
+  font-size: 14px;
+  font-weight: 700;
 }
 
 .download-button {

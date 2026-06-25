@@ -20,4 +20,7 @@ export const apiClient = {
   generatePoster(payload) {
     return postJson('/api/poster', payload);
   },
+  editPoster(payload) {
+    return postJson('/api/poster/edit', payload);
+  },
 };

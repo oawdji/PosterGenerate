@@ -1,4 +1,4 @@
-import { generateCopy, generatePoster } from './ai.js';
+import { generateCopy, generateEditedPoster, generatePoster } from './ai.js';
 import { createApp } from './app.js';
 import { loadConfig } from './env.js';
 
@@ -8,6 +8,7 @@ const app = createApp({
   services: {
     generateCopy: (payload) => generateCopy(config, payload),
     generatePoster: (payload) => generatePoster(config, payload),
+    editPoster: (payload) => generateEditedPoster(config, payload),
   },
 });
 

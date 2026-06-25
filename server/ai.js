@@ -1,4 +1,4 @@
-import { buildCopyMessages, buildPosterPrompt } from './prompts.js';
+import { buildCopyMessages, buildPosterEditPrompt, buildPosterPrompt } from './prompts.js';
 
 function joinUrl(baseUrl, path) {
   return `${String(baseUrl).replace(/\/+$/, '')}${path}`;
@@ -47,7 +47,7 @@ export function formatImageDataUrl(response) {
   return `data:image/png;base64,${base64}`;
 }
 
-export async function requestJson({ baseUrl, apiKey, path, body }) {
+export async function requestJson({ baseUrl, apiKey, path, body, timeoutMs = 120000 }) {
   const response = await fetch(joinUrl(baseUrl, path), {
     method: 'POST',
     headers: {
@@ -55,6 +55,7 @@ export async function requestJson({ baseUrl, apiKey, path, body }) {
       authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify(body),
+    signal: AbortSignal.timeout(timeoutMs),
   });
 
   const text = await response.text();
@@ -92,6 +93,22 @@ export async function generatePoster(config, payload) {
     body: {
       model: config.image.model,
       prompt: buildPosterPrompt(payload),
+      size: '1024x1024',
+      n: 1,
+    },
+  });
+
+  return formatImageDataUrl(imageResponse);
+}
+
+export async function generateEditedPoster(config, payload) {
+  const imageResponse = await requestJson({
+    baseUrl: config.image.baseUrl,
+    apiKey: config.image.apiKey,
+    path: '/v1/images/generations',
+    body: {
+      model: config.image.model,
+      prompt: buildPosterEditPrompt(payload),
       size: '1024x1024',
       n: 1,
     },

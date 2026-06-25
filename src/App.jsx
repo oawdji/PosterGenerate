@@ -1,4 +1,4 @@
-import { Download, Image, Loader2, Sparkles } from 'lucide-react';
+import { Crosshair, Download, Image, Loader2, Sparkles } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { apiClient as defaultApiClient } from './api.js';
 import './styles.css';
@@ -34,9 +34,12 @@ export function PosterTool({ apiClient = defaultApiClient }) {
   const [template, setTemplate] = useState('commercial');
   const [copy, setCopy] = useState(emptyCopy);
   const [posterImage, setPosterImage] = useState('');
+  const [editInstruction, setEditInstruction] = useState('');
+  const [selection, setSelection] = useState(null);
   const [error, setError] = useState('');
   const [copyLoading, setCopyLoading] = useState(false);
   const [posterLoading, setPosterLoading] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
 
   const hasCopy = useMemo(
     () =>
@@ -55,6 +58,8 @@ export function PosterTool({ apiClient = defaultApiClient }) {
     setError('');
     setCopyLoading(true);
     setPosterImage('');
+    setSelection(null);
+    setEditInstruction('');
 
     try {
       const result = await apiClient.generateCopy({ requirement, template });
@@ -73,10 +78,36 @@ export function PosterTool({ apiClient = defaultApiClient }) {
     try {
       const result = await apiClient.generatePoster({ copy, template });
       setPosterImage(result.image);
+      setSelection(null);
+      setEditInstruction('');
     } catch (requestError) {
       setError(requestError.message);
     } finally {
       setPosterLoading(false);
+    }
+  }
+
+  async function handleEditPoster() {
+    if (!posterImage || !selection || !editInstruction.trim()) {
+      return;
+    }
+
+    setError('');
+    setEditLoading(true);
+
+    try {
+      const result = await apiClient.editPoster({
+        copy,
+        template,
+        selection,
+        instruction: editInstruction.trim(),
+      });
+      setPosterImage(result.image);
+      setEditInstruction('');
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setEditLoading(false);
     }
   }
 
@@ -89,6 +120,20 @@ export function PosterTool({ apiClient = defaultApiClient }) {
       ...current,
       sellingPoints: current.sellingPoints.map((item, itemIndex) => (itemIndex === index ? value : item)),
     }));
+  }
+
+  function handlePosterClick(event) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
+    const y = Math.min(1, Math.max(0, (event.clientY - rect.top) / rect.height));
+    setSelection({
+      x: Number(x.toFixed(4)),
+      y: Number(y.toFixed(4)),
+    });
+  }
+
+  function formatSelectionPercent(value) {
+    return `${Math.round(value * 100)}%`;
   }
 
   return (
@@ -176,7 +221,42 @@ export function PosterTool({ apiClient = defaultApiClient }) {
         <section className="poster-panel" aria-label="海报预览">
           {posterImage ? (
             <>
-              <img className="poster-image" src={posterImage} alt="生成的海报" />
+              <div className="poster-editor">
+                <img className="poster-image" src={posterImage} alt="生成的海报" onClick={handlePosterClick} />
+                {selection ? (
+                  <span
+                    className="selection-marker"
+                    style={{ left: `${selection.x * 100}%`, top: `${selection.y * 100}%` }}
+                    aria-hidden="true"
+                  />
+                ) : null}
+              </div>
+              <section className="local-edit-panel" aria-label="局部修改">
+                <div className="local-edit-title">
+                  <Crosshair size={18} aria-hidden="true" />
+                  {selection
+                    ? `选中位置：${formatSelectionPercent(selection.x)}, ${formatSelectionPercent(selection.y)}`
+                    : '点击海报选择修改位置'}
+                </div>
+                <label>
+                  局部修改要求
+                  <textarea
+                    value={editInstruction}
+                    rows={3}
+                    onChange={(event) => setEditInstruction(event.target.value)}
+                    placeholder="例如：把这里改成红色按钮"
+                  />
+                </label>
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={handleEditPoster}
+                  disabled={!selection || !editInstruction.trim() || copyLoading || posterLoading || editLoading}
+                >
+                  {editLoading ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <Sparkles size={18} aria-hidden="true" />}
+                  局部修改
+                </button>
+              </section>
               <a className="download-button" href={posterImage} download="ai-poster.png">
                 <Download size={18} aria-hidden="true" />
                 下载海报

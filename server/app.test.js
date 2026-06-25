@@ -93,3 +93,58 @@ test('POST /api/poster returns generated image', async () => {
   assert.equal(response.status, 200);
   assert.match(response.body.image, /^data:image\/png;base64,/);
 });
+
+test('POST /api/poster/edit rejects requests without a selected point and instruction', async () => {
+  const app = createApp({
+    services: {
+      generateCopy: async () => ({ title: 'unused' }),
+      generatePoster: async () => 'unused',
+      editPoster: async () => 'unused',
+    },
+  });
+
+  const response = await request(app, '/api/poster/edit', {
+    instruction: '   ',
+    selection: { x: 0.5 },
+  });
+
+  assert.equal(response.status, 400);
+  assert.equal(response.body.message, 'Please click a poster location and describe the local edit.');
+});
+
+test('POST /api/poster/edit returns the edited poster image', async () => {
+  const calls = [];
+  const app = createApp({
+    services: {
+      generateCopy: async () => ({ title: 'unused' }),
+      generatePoster: async () => 'unused',
+      editPoster: async (payload) => {
+        calls.push(payload);
+        return 'data:image/png;base64,ZWRpdGVk';
+      },
+    },
+  });
+
+  const response = await request(app, '/api/poster/edit', {
+    template: 'event',
+    copy: { title: '新品上市' },
+    instruction: '把这里改成红色按钮',
+    selection: { x: 0.25, y: 0.75 },
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.image, 'data:image/png;base64,ZWRpdGVk');
+  assert.deepEqual(calls[0], {
+    template: 'event',
+    copy: {
+      title: '新品上市',
+      subtitle: '',
+      sellingPoints: [],
+      callToAction: '',
+      visualStyle: '',
+      imagePrompt: '',
+    },
+    instruction: '把这里改成红色按钮',
+    selection: { x: 0.25, y: 0.75 },
+  });
+});
