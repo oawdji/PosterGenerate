@@ -78,20 +78,26 @@ test('POST /api/poster rejects empty copy', async () => {
 });
 
 test('POST /api/poster returns generated image', async () => {
+  const calls = [];
   const app = createApp({
     services: {
       generateCopy: async () => ({ title: 'unused' }),
-      generatePoster: async ({ copy }) => `data:image/png;base64,${Buffer.from(copy.title).toString('base64')}`,
+      generatePoster: async (payload) => {
+        calls.push(payload);
+        return `data:image/png;base64,${Buffer.from(payload.copy.title).toString('base64')}`;
+      },
     },
   });
 
   const response = await request(app, '/api/poster', {
     template: 'commercial',
     copy: { title: '新品上市' },
+    imageOptions: { quality: 'high', aspectRatio: '16:9' },
   });
 
   assert.equal(response.status, 200);
   assert.match(response.body.image, /^data:image\/png;base64,/);
+  assert.deepEqual(calls[0].imageOptions, { quality: 'high', aspectRatio: '16:9' });
 });
 
 test('POST /api/poster/edit rejects requests without a selected point and instruction', async () => {
@@ -128,6 +134,7 @@ test('POST /api/poster/edit returns the edited poster image', async () => {
   const response = await request(app, '/api/poster/edit', {
     template: 'event',
     copy: { title: '新品上市' },
+    imageOptions: { quality: 'medium', aspectRatio: '3:4' },
     instruction: '把这里改成红色按钮',
     selection: { x: 0.25, y: 0.75 },
   });
@@ -145,6 +152,7 @@ test('POST /api/poster/edit returns the edited poster image', async () => {
       imagePrompt: '',
     },
     instruction: '把这里改成红色按钮',
+    imageOptions: { quality: 'medium', aspectRatio: '3:4' },
     selection: { x: 0.25, y: 0.75 },
   });
 });

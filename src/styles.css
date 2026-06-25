@@ -158,7 +158,8 @@ button:disabled {
   background: #fff3f1;
 }
 
-.copy-panel {
+.copy-panel,
+.image-options-panel {
   margin: 22px 0;
 }
 

@@ -47,6 +47,37 @@ export function formatImageDataUrl(response) {
   return `data:image/png;base64,${base64}`;
 }
 
+export function normalizeImageOptions(input) {
+  const source = input && typeof input === 'object' ? input : {};
+  const quality = ['auto', 'low', 'medium', 'high'].includes(source.quality) ? source.quality : 'auto';
+  const aspectRatio = typeof source.aspectRatio === 'string' ? source.aspectRatio.trim() : '1:1';
+  const ratioMatch = aspectRatio.match(/^(\d+(?:\.\d+)?):(\d+(?:\.\d+)?)$/);
+
+  if (!ratioMatch) {
+    return { quality, size: '1024x1024', aspectRatio: '1:1' };
+  }
+
+  const width = Number(ratioMatch[1]);
+  const height = Number(ratioMatch[2]);
+
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+    return { quality, size: '1024x1024', aspectRatio: '1:1' };
+  }
+
+  const ratio = width / height;
+  const normalizedRatio = `${Number.parseFloat(String(width))}:${Number.parseFloat(String(height))}`;
+
+  if (ratio > 1.05) {
+    return { quality, size: '1536x1024', aspectRatio: normalizedRatio };
+  }
+
+  if (ratio < 0.95) {
+    return { quality, size: '1024x1536', aspectRatio: normalizedRatio };
+  }
+
+  return { quality, size: '1024x1024', aspectRatio: normalizedRatio };
+}
+
 export async function requestJson({ baseUrl, apiKey, path, body, timeoutMs = 120000 }) {
   const response = await fetch(joinUrl(baseUrl, path), {
     method: 'POST',
@@ -86,14 +117,16 @@ export async function generateCopy(config, payload) {
 }
 
 export async function generatePoster(config, payload) {
+  const imageOptions = normalizeImageOptions(payload.imageOptions);
   const imageResponse = await requestJson({
     baseUrl: config.image.baseUrl,
     apiKey: config.image.apiKey,
     path: '/v1/images/generations',
     body: {
       model: config.image.model,
-      prompt: buildPosterPrompt(payload),
-      size: '1024x1024',
+      prompt: buildPosterPrompt({ ...payload, imageOptions }),
+      size: imageOptions.size,
+      quality: imageOptions.quality,
       n: 1,
     },
   });
@@ -102,14 +135,16 @@ export async function generatePoster(config, payload) {
 }
 
 export async function generateEditedPoster(config, payload) {
+  const imageOptions = normalizeImageOptions(payload.imageOptions);
   const imageResponse = await requestJson({
     baseUrl: config.image.baseUrl,
     apiKey: config.image.apiKey,
     path: '/v1/images/generations',
     body: {
       model: config.image.model,
-      prompt: buildPosterEditPrompt(payload),
-      size: '1024x1024',
+      prompt: buildPosterEditPrompt({ ...payload, imageOptions }),
+      size: imageOptions.size,
+      quality: imageOptions.quality,
       n: 1,
     },
   });

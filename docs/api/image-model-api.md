@@ -41,6 +41,7 @@ Full poster request body:
   "model": "AI_IMAGE_MODEL",
   "prompt": "生成一张完整的中文商业海报...",
   "size": "1024x1024",
+  "quality": "auto",
   "n": 1
 }
 ```
@@ -52,11 +53,47 @@ Local edit request body also uses `/v1/images/generations`. The prompt is writte
   "model": "AI_IMAGE_MODEL",
   "prompt": "生成一张完整的中文商业海报...\n局部修改要求：\n选中位置：从海报左上角计算，x 25%，y 75%...\n用户修改指令：把这里改成红色按钮...",
   "size": "1024x1024",
+  "quality": "auto",
   "n": 1
 }
 ```
 
 The current implementation intentionally does not call a provider-specific multipart image edit endpoint. This keeps compatibility with OpenAI-compatible generation providers.
+
+## Image Options
+
+The frontend sends image settings as `imageOptions`.
+
+```json
+{
+  "quality": "high",
+  "aspectRatio": "16:9"
+}
+```
+
+Supported quality values:
+
+- `auto`
+- `low`
+- `medium`
+- `high`
+
+Supported standard ratios in the UI:
+
+- `1:1`
+- `3:4`
+- `4:3`
+- `9:16`
+- `16:9`
+- Custom width and height, converted to a ratio such as `3:4`
+
+The image API only receives supported generation sizes. The server maps ratios to sizes:
+
+- Square or near-square ratios: `1024x1024`
+- Landscape ratios: `1536x1024`
+- Portrait ratios: `1024x1536`
+
+The exact target ratio is also written into the prompt as `目标画幅比例：...`, so custom ratios still guide the composition even when they map to the closest supported API size.
 
 ## Expected Upstream Response
 
@@ -84,6 +121,10 @@ Request body:
 ```json
 {
   "template": "commercial",
+  "imageOptions": {
+    "quality": "high",
+    "aspectRatio": "16:9"
+  },
   "copy": {
     "title": "周末新品上市",
     "subtitle": "咖啡与甜点限时组合",
@@ -131,6 +172,10 @@ Request body:
 ```json
 {
   "template": "commercial",
+  "imageOptions": {
+    "quality": "medium",
+    "aspectRatio": "3:4"
+  },
   "copy": {
     "title": "周末新品上市",
     "subtitle": "咖啡与甜点限时组合",

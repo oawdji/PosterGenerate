@@ -23,16 +23,18 @@ export function buildCopyMessages({ requirement, template }) {
   ];
 }
 
-export function buildPosterPrompt({ copy, template }) {
+export function buildPosterPrompt({ copy, template, imageOptions }) {
   const safeCopy = copy || {};
   const templateGuide = getTemplateGuide(normalizeTemplate(template));
   const sellingPoints = Array.isArray(safeCopy.sellingPoints)
     ? safeCopy.sellingPoints.filter(Boolean).join(' / ')
     : '';
+  const aspectRatio = imageOptions?.aspectRatio || '1:1';
 
   return [
     '生成一张完整的中文商业海报，不是背景图，也不是样机图。',
     `海报类型：${templateGuide.label}。`,
+    `目标画幅比例：${aspectRatio}。`,
     `视觉方向：${templateGuide.prompt}。`,
     safeCopy.visualStyle ? `整体风格：${safeCopy.visualStyle}。` : '',
     safeCopy.imagePrompt ? `画面提示：${safeCopy.imagePrompt}。` : '',
@@ -47,8 +49,8 @@ export function buildPosterPrompt({ copy, template }) {
     .join('\n');
 }
 
-export function buildPosterEditPrompt({ copy, template, selection, instruction }) {
-  const basePrompt = buildPosterPrompt({ copy, template });
+export function buildPosterEditPrompt({ copy, template, selection, instruction, imageOptions }) {
+  const basePrompt = buildPosterPrompt({ copy, template, imageOptions });
   const xPercent = Math.round(Number(selection?.x || 0) * 100);
   const yPercent = Math.round(Number(selection?.y || 0) * 100);
 
