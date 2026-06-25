@@ -32,34 +32,6 @@ describe('PosterTool', () => {
 
   it('generates and displays the final poster image', async () => {
     const user = userEvent.setup();
-    const posterCalls = [];
-    const apiClient = {
-      generateCopy: async () => ({ copy }),
-      generatePoster: async (payload) => {
-        posterCalls.push(payload);
-        return { image: 'data:image/png;base64,aW1hZ2U=' };
-      },
-    };
-
-    render(<PosterTool apiClient={apiClient} />);
-
-    await user.type(screen.getByLabelText('海报需求'), '咖啡店周末促销');
-    await user.selectOptions(screen.getByLabelText('图片清晰度'), 'high');
-    await user.selectOptions(screen.getByLabelText('图片比例'), '16:9');
-    await user.click(screen.getByRole('button', { name: '生成文案' }));
-    await screen.findByDisplayValue('周末新品上市');
-    await user.click(screen.getByRole('button', { name: '生成海报' }));
-
-    expect(posterCalls[0]).toMatchObject({
-      template: 'commercial',
-      imageOptions: { quality: 'high', aspectRatio: '16:9' },
-    });
-    const image = await screen.findByAltText('生成的海报');
-    expect(image).toHaveAttribute('src', 'data:image/png;base64,aW1hZ2U=');
-    expect(screen.getByRole('link', { name: '下载海报' })).toHaveAttribute('href', 'data:image/png;base64,aW1hZ2U=');
-  });
-
-  it('places image settings directly before the generate poster action', () => {
     const apiClient = {
       generateCopy: async () => ({ copy }),
       generatePoster: async () => ({ image: 'data:image/png;base64,aW1hZ2U=' }),
@@ -67,12 +39,14 @@ describe('PosterTool', () => {
 
     render(<PosterTool apiClient={apiClient} />);
 
-    const copyPanel = screen.getByLabelText('AI 文案');
-    const imageSettings = screen.getByLabelText('图片设置');
-    const generatePosterButton = screen.getByRole('button', { name: '生成海报' });
+    await user.type(screen.getByLabelText('海报需求'), '咖啡店周末促销');
+    await user.click(screen.getByRole('button', { name: '生成文案' }));
+    await screen.findByDisplayValue('周末新品上市');
+    await user.click(screen.getByRole('button', { name: '生成海报' }));
 
-    expect(copyPanel.compareDocumentPosition(imageSettings) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(imageSettings.compareDocumentPosition(generatePosterButton) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const image = await screen.findByAltText('生成的海报');
+    expect(image).toHaveAttribute('src', 'data:image/png;base64,aW1hZ2U=');
+    expect(screen.getByRole('link', { name: '下载海报' })).toHaveAttribute('href', 'data:image/png;base64,aW1hZ2U=');
   });
 
   it('submits a local poster edit for the clicked point', async () => {
@@ -89,12 +63,6 @@ describe('PosterTool', () => {
 
     render(<PosterTool apiClient={apiClient} />);
 
-    await user.selectOptions(screen.getByLabelText('图片清晰度'), 'medium');
-    await user.selectOptions(screen.getByLabelText('图片比例'), 'custom');
-    await user.clear(screen.getByLabelText('自定义宽度'));
-    await user.type(screen.getByLabelText('自定义宽度'), '3');
-    await user.clear(screen.getByLabelText('自定义高度'));
-    await user.type(screen.getByLabelText('自定义高度'), '4');
     await user.click(screen.getByRole('button', { name: '生成文案' }));
     await screen.findByDisplayValue('周末新品上市');
     await user.click(screen.getByRole('button', { name: '生成海报' }));
@@ -122,7 +90,6 @@ describe('PosterTool', () => {
     expect(editCalls[0]).toMatchObject({
       copy,
       template: 'commercial',
-      imageOptions: { quality: 'medium', aspectRatio: '3:4' },
       selection: { x: 0.25, y: 0.25 },
       instruction: '把这里改成红色按钮',
     });

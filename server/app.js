@@ -68,7 +68,7 @@ export function createApp({ services }) {
     }
 
     try {
-      const image = await services.generatePoster({ copy, template, imageOptions: request.body?.imageOptions });
+      const image = await services.generatePoster({ copy, template });
       response.json({ image });
     } catch (error) {
       console.error('Poster generation failed:', error);
@@ -91,7 +91,6 @@ export function createApp({ services }) {
       const editedImage = await services.editPoster({
         copy,
         template,
-        imageOptions: request.body?.imageOptions,
         selection,
         instruction,
       });

@@ -19,22 +19,6 @@ const templates = [
   { value: 'holiday', label: '节日营销' },
 ];
 
-const qualityOptions = [
-  { value: 'auto', label: '自动' },
-  { value: 'low', label: '标准' },
-  { value: 'medium', label: '高清' },
-  { value: 'high', label: '超清' },
-];
-
-const aspectRatioOptions = [
-  { value: '1:1', label: '1:1 方图' },
-  { value: '3:4', label: '3:4 竖版' },
-  { value: '4:3', label: '4:3 横版' },
-  { value: '9:16', label: '9:16 手机竖版' },
-  { value: '16:9', label: '16:9 横屏' },
-  { value: 'custom', label: '自定义' },
-];
-
 function normalizeCopyFields(copy) {
   return {
     ...emptyCopy,
@@ -48,10 +32,6 @@ function normalizeCopyFields(copy) {
 export function PosterTool({ apiClient = defaultApiClient }) {
   const [requirement, setRequirement] = useState('');
   const [template, setTemplate] = useState('commercial');
-  const [quality, setQuality] = useState('auto');
-  const [aspectRatio, setAspectRatio] = useState('1:1');
-  const [customWidth, setCustomWidth] = useState('1');
-  const [customHeight, setCustomHeight] = useState('1');
   const [copy, setCopy] = useState(emptyCopy);
   const [posterImage, setPosterImage] = useState('');
   const [editInstruction, setEditInstruction] = useState('');
@@ -72,14 +52,6 @@ export function PosterTool({ apiClient = defaultApiClient }) {
           copy.sellingPoints.some(Boolean),
       ),
     [copy],
-  );
-
-  const imageOptions = useMemo(
-    () => ({
-      quality,
-      aspectRatio: aspectRatio === 'custom' ? `${Number(customWidth) || 1}:${Number(customHeight) || 1}` : aspectRatio,
-    }),
-    [aspectRatio, customHeight, customWidth, quality],
   );
 
   async function handleGenerateCopy() {
@@ -104,7 +76,7 @@ export function PosterTool({ apiClient = defaultApiClient }) {
     setPosterLoading(true);
 
     try {
-      const result = await apiClient.generatePoster({ copy, template, imageOptions });
+      const result = await apiClient.generatePoster({ copy, template });
       setPosterImage(result.image);
       setSelection(null);
       setEditInstruction('');
@@ -127,7 +99,6 @@ export function PosterTool({ apiClient = defaultApiClient }) {
       const result = await apiClient.editPoster({
         copy,
         template,
-        imageOptions,
         selection,
         instruction: editInstruction.trim(),
       });
@@ -238,56 +209,6 @@ export function PosterTool({ apiClient = defaultApiClient }) {
                   onChange={(event) => updateCopyField('imagePrompt', event.target.value)}
                 />
               </label>
-            </div>
-          </section>
-
-          <section className="image-options-panel" aria-label="图片设置">
-            <div className="panel-title">图片设置</div>
-            <div className="field-grid">
-              <label>
-                图片清晰度
-                <select value={quality} onChange={(event) => setQuality(event.target.value)}>
-                  {qualityOptions.map((item) => (
-                    <option key={item.value} value={item.value}>
-                      {item.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                图片比例
-                <select value={aspectRatio} onChange={(event) => setAspectRatio(event.target.value)}>
-                  {aspectRatioOptions.map((item) => (
-                    <option key={item.value} value={item.value}>
-                      {item.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              {aspectRatio === 'custom' ? (
-                <>
-                  <label>
-                    自定义宽度
-                    <input
-                      min="1"
-                      step="1"
-                      type="number"
-                      value={customWidth}
-                      onChange={(event) => setCustomWidth(event.target.value)}
-                    />
-                  </label>
-                  <label>
-                    自定义高度
-                    <input
-                      min="1"
-                      step="1"
-                      type="number"
-                      value={customHeight}
-                      onChange={(event) => setCustomHeight(event.target.value)}
-                    />
-                  </label>
-                </>
-              ) : null}
             </div>
           </section>
 
