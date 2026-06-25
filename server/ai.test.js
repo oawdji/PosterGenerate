@@ -4,6 +4,7 @@ import {
   extractJsonObject,
   formatImageDataUrl,
   generateEditedPoster,
+  generatePoster,
   normalizeCopy,
   parseCopyCompletion,
   requestJson,
@@ -54,6 +55,13 @@ test('parseCopyCompletion parses OpenAI-compatible chat completion content', () 
 
 test('formatImageDataUrl formats b64_json as a png data URL', () => {
   assert.equal(formatImageDataUrl({ data: [{ b64_json: 'aW1hZ2U=' }] }), 'data:image/png;base64,aW1hZ2U=');
+});
+
+test('formatImageDataUrl accepts image URL responses', () => {
+  assert.equal(
+    formatImageDataUrl({ data: [{ url: 'https://image.example.com/poster.png' }] }),
+    'https://image.example.com/poster.png',
+  );
 });
 
 test('requestJson sends AI requests with an abort signal', async () => {
@@ -130,6 +138,46 @@ test('buildPosterEditPrompt uses Chinese local edit instructions', () => {
   assert.match(prompt, /把这里改成红色按钮/);
   assert.match(prompt, /保持海报其他区域不变/);
   assert.match(prompt, /新品上市/);
+});
+
+test('generatePoster converts image URL responses to data URLs', async () => {
+  const originalFetch = globalThis.fetch;
+  const requests = [];
+  globalThis.fetch = async (url, options) => {
+    requests.push({ url, options });
+    if (String(url).endsWith('/v1/images/generations')) {
+      return new Response(JSON.stringify({ data: [{ url: 'https://image.example.com/poster.png' }] }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      });
+    }
+
+    return new Response(Buffer.from('image'), {
+      status: 200,
+      headers: { 'content-type': 'image/png' },
+    });
+  };
+
+  try {
+    const image = await generatePoster(
+      {
+        image: {
+          baseUrl: 'https://image.example.com',
+          apiKey: 'image-key',
+          model: 'poster-model',
+        },
+      },
+      {
+        template: 'commercial',
+        copy: { title: '新品上市' },
+      },
+    );
+
+    assert.equal(image, 'data:image/png;base64,aW1hZ2U=');
+    assert.equal(requests[1].url, 'https://image.example.com/poster.png');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
 
 test('generateEditedPoster uses the image generation endpoint with the local edit prompt', async () => {

@@ -4,6 +4,10 @@ function joinUrl(baseUrl, path) {
   return `${String(baseUrl).replace(/\/+$/, '')}${path}`;
 }
 
+function isRemoteUrl(value) {
+  return /^https?:\/\//i.test(value);
+}
+
 export function extractJsonObject(text) {
   const value = String(text || '');
   const start = value.indexOf('{');
@@ -39,12 +43,37 @@ export function parseCopyCompletion(completion) {
 }
 
 export function formatImageDataUrl(response) {
-  const base64 = response?.data?.[0]?.b64_json;
+  const image = response?.data?.[0];
+  const base64 = image?.b64_json;
   if (!base64) {
-    throw new Error('Image response did not include b64_json');
+    const url = typeof image?.url === 'string' ? image.url.trim() : '';
+    if (url) return url;
+
+    throw new Error('Image response did not include b64_json or url');
   }
 
   return `data:image/png;base64,${base64}`;
+}
+
+export async function resolveImageDataUrl(response) {
+  const image = formatImageDataUrl(response);
+
+  if (!isRemoteUrl(image)) {
+    return image;
+  }
+
+  const responseFromUrl = await fetch(image, {
+    signal: AbortSignal.timeout(120000),
+  });
+
+  if (!responseFromUrl.ok) {
+    throw new Error(`Image download failed with status ${responseFromUrl.status}`);
+  }
+
+  const contentType = responseFromUrl.headers.get('content-type')?.split(';')[0] || 'image/png';
+  const buffer = Buffer.from(await responseFromUrl.arrayBuffer());
+
+  return `data:${contentType};base64,${buffer.toString('base64')}`;
 }
 
 export async function requestJson({ baseUrl, apiKey, path, body, timeoutMs = 120000 }) {
@@ -98,7 +127,7 @@ export async function generatePoster(config, payload) {
     },
   });
 
-  return formatImageDataUrl(imageResponse);
+  return resolveImageDataUrl(imageResponse);
 }
 
 export async function generateEditedPoster(config, payload) {
@@ -114,5 +143,5 @@ export async function generateEditedPoster(config, payload) {
     },
   });
 
-  return formatImageDataUrl(imageResponse);
+  return resolveImageDataUrl(imageResponse);
 }
